@@ -1,0 +1,66 @@
+package display
+
+import (
+	"golang.org/x/exp/shiny/screen"
+	"image"
+	"image/color"
+	"image/draw"
+)
+
+// Display represents an Output of colors
+type Display interface {
+	InitBuffer() error
+	UploadBuffer()
+	Width() int
+	Height() int
+	SetPixelAt(x, y int, col color.RGBA)
+}
+
+// NewScaledDisplay creates a scaled display, scale must be int
+func NewScaledDisplay(window screen.Window, screen screen.Screen, width, height, scale int) Display {
+	return &scaledDisplay{
+		window: window,
+		screen: screen,
+		width:  width,
+		height: height,
+		scale:  scale}
+}
+
+type scaledDisplay struct {
+	window               screen.Window
+	screen               screen.Screen
+	buffer               screen.Buffer
+	rgba                 *image.RGBA
+	width, height, scale int
+}
+
+func (d *scaledDisplay) InitBuffer() error {
+	buf, err := d.screen.NewBuffer(image.Point{d.width, d.height})
+	if err != nil {
+		return err
+	}
+	d.buffer = buf
+	d.rgba = buf.RGBA()
+	return nil
+}
+
+func (d *scaledDisplay) UploadBuffer() {
+	d.window.Upload(image.ZP, d.buffer, d.buffer.Bounds())
+	d.buffer.Release()
+}
+
+func (d *scaledDisplay) Width() int {
+	return d.width / d.scale
+}
+
+func (d *scaledDisplay) Height() int {
+	return d.height / d.scale
+}
+
+func (d *scaledDisplay) SetPixelAt(x, y int, col color.RGBA) {
+	x0 := x * d.scale
+	y0 := y * d.scale
+	x1 := x0 + d.scale
+	y1 := y0 + d.scale
+	draw.Draw(d.rgba, image.Rect(x0, y0, x1, y1), image.NewUniform(col), image.ZP, draw.Src)
+}

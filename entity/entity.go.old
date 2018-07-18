@@ -1,0 +1,34 @@
+package entity
+
+import (
+	"image"
+)
+
+type Entity interface {
+	// The Position in the world
+	Pos() image.Point
+	SetPos(pos image.Point)
+	// The image to render
+	Image() *image.RGBA
+}
+
+type scaledEntity struct {
+	pos image.Point
+	img image.RGBA
+}
+
+func (e *scaledEntity) Pos() image.Point {
+	return e.pos
+}
+
+func (e *scaledEntity) SetPos(pos image.Point) {
+	e.pos = pos
+}
+
+func (e *scaledEntity) Image() *image.RGBA {
+	return &e.img
+}
+
+func NewScaledEntity(img image.RGBA, scale int,) {
+	img.
+}
