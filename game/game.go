@@ -1,7 +1,7 @@
 package game
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/markoczy/game2d/display"
 	"github.com/markoczy/game2d/entity"
 	"golang.org/x/exp/shiny/driver"
@@ -36,18 +36,23 @@ var (
 )
 
 func (g *game) Run() error {
-	fmt.Println("Start.")
+	// fmt.Println("Start.")
 
-	k := 10 * g.scale
-	img := image.NewRGBA(image.Rect(0, 0, k, k))
-	// for i := range img.Pix {}
-	for x := 0; x < k; x++ {
-		for y := 0; y < k; y++ {
-			// if x == y {
-			img.SetRGBA(x, y, white)
-			// }
-		}
+	// k := 10 * g.scale
+	// img := image.NewRGBA(image.Rect(0, 0, k, k))
+	// // for i := range img.Pix {}
+	// for x := 0; x < k; x++ {
+	// 	for y := 0; y < k; y++ {
+	// 		// if x == y {
+	// 		img.SetRGBA(x, y, white)
+	// 		// }
+	// 	}
+	// }
+	img, err := display.LoadImage("./res/sample0.png")
+	if err != nil {
+		return err
 	}
+	img = display.ScaleImage(img, g.scale)
 	g.addTestEntity(img, image.Point{10, 10}, image.Point{1, 1})
 	g.addTestEntity(img, image.Point{50, 50}, image.Point{-1, 1})
 	g.addTestEntity(img, image.Point{100, 100}, image.Point{1, -1})
@@ -73,6 +78,7 @@ func (g *game) Run() error {
 		}
 
 		g.screen = display.NewScreen(w, s, g.width, g.height, g.scale)
+		// g.screen.SetPos(image.Point{100, 100})
 
 		// Start Game Thread
 		go func() {

@@ -71,5 +71,5 @@ func (d *defaultScreen) Scale() int {
 
 // AddImage pos is world-related
 func (d *defaultScreen) Render(img *image.RGBA, pos image.Point) {
-	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Src)
+	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Over)
 }

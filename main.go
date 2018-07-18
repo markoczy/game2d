@@ -8,5 +8,8 @@ import (
 func main() {
 	fmt.Println("Started.")
 	// game.NewGame(800, 800, 10, 20).Run()
-	game.NewGame(800, 800, 2, 20).Run()
+	err := game.NewGame(800, 800, 3, 200).Run()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+	}
 }
