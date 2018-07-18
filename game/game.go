@@ -16,7 +16,7 @@ import (
 )
 
 func NewGame(width, height, scale, tick int) Game {
-	return &game{width, height, scale, tick}
+	return &game{width: width, height: height, scale: scale, ttick: tick}
 }
 
 type Game interface {
@@ -24,7 +24,10 @@ type Game interface {
 }
 
 type game struct {
-	width, height, scale, tick int
+	width, height int
+	scale, ttick  int
+	screen        display.Screen
+	entities      []entity.Entity
 }
 
 var (
@@ -45,7 +48,10 @@ func (g *game) Run() error {
 			// }
 		}
 	}
-	ent := entity.NewUniformSprite(1, img, image.Point{10, 10})
+	g.addTestEntity(img, image.Point{10, 10}, image.Point{1, 1})
+	g.addTestEntity(img, image.Point{50, 50}, image.Point{-1, 1})
+	g.addTestEntity(img, image.Point{100, 100}, image.Point{1, -1})
+	g.addTestEntity(img, image.Point{200, 100}, image.Point{-1, -1})
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -66,25 +72,27 @@ func (g *game) Run() error {
 			return
 		}
 
-		disp := display.NewScreen(w, s, g.width, g.height, g.scale)
+		g.screen = display.NewScreen(w, s, g.width, g.height, g.scale)
 
 		// Start Game Thread
 		go func() {
 			ticks := 0
 			for !interrupt {
-				disp.SetPos(image.Point{ticks, ticks})
+				// g.screen.SetPos(image.Point{ticks, ticks})
 				tStart := time.Now().UTC().UnixNano()
-				err := disp.InitBuffer()
+				err := g.screen.InitBuffer()
 				if err != nil {
 					chErr <- err
 					return
 				}
-				ent.Render(disp)
+
+				g.tick()
+				g.render()
 
 				// Smooth Framerate
 				deltaT := (time.Now().UTC().UnixNano() - tStart) / 10e6
-				disp.UploadBuffer()
-				sleep := g.tick - int(deltaT)
+				g.screen.UploadBuffer()
+				sleep := g.ttick - int(deltaT)
 				if sleep > 0 {
 					log.Printf("Sleeping %d millis", sleep)
 					time.Sleep(time.Duration(sleep) * time.Millisecond)
@@ -117,4 +125,23 @@ func (g *game) Run() error {
 			return nil
 		}
 	}
+}
+
+func (g *game) tick() {
+	for _, ent := range g.entities {
+		ent.Tick()
+	}
+}
+
+func (g *game) render() {
+	for _, ent := range g.entities {
+		ent.Render(g.screen)
+	}
+}
+
+func (g *game) addTestEntity(img *image.RGBA, p0 image.Point, dp image.Point) {
+	ent := entity.NewUniformSprite(1, img, p0, func(e entity.Entity) {
+		e.SetPos(e.Pos().Add(dp))
+	})
+	g.entities = append(g.entities, ent)
 }
