@@ -10,18 +10,18 @@ import (
 	"os"
 )
 
-func LoadImage(path string) (*image.RGBA, error) {
+func LoadImage(path string) (*image.RGBA, image.Point, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, image.ZP, err
 	}
 	reader := bufio.NewReader(file)
 	img, err := png.Decode(reader)
 	if err != nil {
-		return nil, err
+		return nil, image.ZP, err
 	}
 	if img.ColorModel() != color.NRGBAModel {
-		return nil, fmt.Errorf("Bad Color model: %c", img.ColorModel())
+		return nil, image.ZP, fmt.Errorf("Bad Color model: %c", img.ColorModel())
 	}
 
 	nrgba := img.(*image.NRGBA)
@@ -29,14 +29,12 @@ func LoadImage(path string) (*image.RGBA, error) {
 	for x := 0; x <= nrgba.Bounds().Max.X; x++ {
 		for y := 0; y <= nrgba.Bounds().Max.Y; y++ {
 			rgba.Set(x, y, nrgba.NRGBAAt(x, y))
-			fmt.Printf("nrgba: %v, rgba: %v\n", nrgba.NRGBAAt(x, y), rgba.RGBAAt(x, y))
+			// fmt.Printf("nrgba: %v, rgba: %v\n", nrgba.NRGBAAt(x, y), rgba.RGBAAt(x, y))
 		}
 	}
 
-	// for i := 0; i < len(nrgba.Pix); i++ {
-	// 	rgba.Set
-	// }
-	return rgba, nil
+	dim := image.Point{img.Bounds().Dx(), img.Bounds().Dy()}
+	return rgba, dim, nil
 }
 
 func ScaleImage(img *image.RGBA, scale int) *image.RGBA {

@@ -2,14 +2,13 @@ package game
 
 import (
 	// "fmt"
+	"github.com/markoczy/game2d/background"
 	"github.com/markoczy/game2d/display"
 	"github.com/markoczy/game2d/entity"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/lifecycle"
 	"image"
-	// "image"
-	"image/color"
 	"log"
 	"math/rand"
 	"time"
@@ -28,35 +27,26 @@ type game struct {
 	scale, ttick  int
 	screen        display.Screen
 	entities      []entity.Entity
+	bg            display.Visual
 }
 
-var (
-	black = color.RGBA{0x00, 0x00, 0x00, 0xff}
-	white = color.RGBA{0xff, 0xff, 0xff, 0xff}
-)
-
 func (g *game) Run() error {
-	// fmt.Println("Start.")
-
-	// k := 10 * g.scale
-	// img := image.NewRGBA(image.Rect(0, 0, k, k))
-	// // for i := range img.Pix {}
-	// for x := 0; x < k; x++ {
-	// 	for y := 0; y < k; y++ {
-	// 		// if x == y {
-	// 		img.SetRGBA(x, y, white)
-	// 		// }
-	// 	}
-	// }
-	img, err := display.LoadImage("./res/sample0.png")
+	img, dim, err := display.LoadImage("./res/testbg.png")
 	if err != nil {
 		return err
 	}
 	img = display.ScaleImage(img, g.scale)
-	g.addTestEntity(img, image.Point{10, 10}, image.Point{1, 1})
-	g.addTestEntity(img, image.Point{50, 50}, image.Point{-1, 1})
-	g.addTestEntity(img, image.Point{100, 100}, image.Point{1, -1})
-	g.addTestEntity(img, image.Point{200, 100}, image.Point{-1, -1})
+	g.bg = background.NewSingleTiledBG(img, dim, image.Point{1, 1})
+
+	img, dim, err = display.LoadImage("./res/sample0.png")
+	if err != nil {
+		return err
+	}
+	img = display.ScaleImage(img, g.scale)
+	g.addTestEntity(img, image.Point{0, 0}, dim, image.Point{0, 0})
+	g.addTestEntity(img, image.Point{50, 50}, dim, image.Point{-1, 1})
+	g.addTestEntity(img, image.Point{100, 100}, dim, image.Point{1, -1})
+	g.addTestEntity(img, image.Point{200, 100}, dim, image.Point{-1, -1})
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -84,7 +74,7 @@ func (g *game) Run() error {
 		go func() {
 			ticks := 0
 			for !interrupt {
-				// g.screen.SetPos(image.Point{ticks, ticks})
+				g.screen.SetPos(image.Point{ticks, ticks})
 				tStart := time.Now().UTC().UnixNano()
 				err := g.screen.InitBuffer()
 				if err != nil {
@@ -95,9 +85,9 @@ func (g *game) Run() error {
 				g.tick()
 				g.render()
 
+				g.screen.UploadBuffer()
 				// Smooth Framerate
 				deltaT := (time.Now().UTC().UnixNano() - tStart) / 10e6
-				g.screen.UploadBuffer()
 				sleep := g.ttick - int(deltaT)
 				if sleep > 0 {
 					log.Printf("Sleeping %d millis", sleep)
@@ -140,13 +130,16 @@ func (g *game) tick() {
 }
 
 func (g *game) render() {
+	if g.bg != nil {
+		g.bg.Render(g.screen)
+	}
 	for _, ent := range g.entities {
 		ent.Render(g.screen)
 	}
 }
 
-func (g *game) addTestEntity(img *image.RGBA, p0 image.Point, dp image.Point) {
-	ent := entity.NewUniformSprite(1, img, p0, func(e entity.Entity) {
+func (g *game) addTestEntity(img *image.RGBA, p0 image.Point, dim image.Point, dp image.Point) {
+	ent := entity.NewUniformSprite(1, img, p0, dim, func(e entity.Entity) {
 		e.SetPos(e.Pos().Add(dp))
 	})
 	g.entities = append(g.entities, ent)

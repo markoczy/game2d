@@ -5,6 +5,7 @@ import (
 	"image"
 	// "image/color"
 	"image/draw"
+	// "log"
 )
 
 type Screen interface {
@@ -15,6 +16,7 @@ type Screen interface {
 	SetPos(image.Point)
 	Scale() int // or somewhere else...
 	Render(img *image.RGBA, pos image.Point)
+	RenderW(img *image.RGBA, posw image.Point, dimw image.Point)
 }
 
 func NewScreen(window screen.Window, screen screen.Screen, width, height, scale int) Screen {
@@ -23,7 +25,8 @@ func NewScreen(window screen.Window, screen screen.Screen, width, height, scale 
 		screen: screen,
 		width:  width,
 		height: height,
-		scale:  scale}
+		scale:  scale,
+		bounds: image.Rect(0, 0, width/scale, height/scale)}
 }
 
 type defaultScreen struct {
@@ -69,7 +72,21 @@ func (d *defaultScreen) Scale() int {
 	return d.scale
 }
 
-// AddImage pos is world-related
+// Render pos is screen-related
 func (d *defaultScreen) Render(img *image.RGBA, pos image.Point) {
 	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Over)
+}
+
+// RenderW pos is world-related
+func (d *defaultScreen) RenderW(img *image.RGBA, pos image.Point, dim image.Point) {
+	posS := d.worldCoordsToScreen(pos, dim.Y)
+	draw.Draw(d.rgba, img.Bounds().Add(posS), img, image.ZP, draw.Over)
+}
+
+func (d *defaultScreen) worldCoordsToScreen(pos image.Point, height int) image.Point {
+	rect := d.bounds
+	xNew := (pos.X - rect.Min.X) * d.scale
+	yNew := ((rect.Min.Y + rect.Dy()) - (pos.Y + height)) * d.scale
+	// log.Printf("rect: %v, pos: %v, xNew: %v, yNew: %v\n", rect, pos, xNew, yNew)
+	return image.Point{xNew, yNew}
 }
