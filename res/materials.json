@@ -1,0 +1,9 @@
+{
+  "materials": [
+    {
+      "id": 0,
+      "name": "rock",
+      "solid": 1
+    }
+  ]
+}

@@ -36,7 +36,7 @@ func (g *game) Run() error {
 		return err
 	}
 	img = display.ScaleImage(img, g.scale)
-	g.bg = background.NewSingleTiledBG(img, dim, image.Point{1, 1})
+	g.bg = background.NewSingleTiledBG(img, dim, image.Point{2, 2})
 
 	img, dim, err = display.LoadImage("./res/sample0.png")
 	if err != nil {

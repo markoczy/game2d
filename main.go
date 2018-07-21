@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/markoczy/game2d/game"
+	"github.com/markoczy/game2d/world"
 )
 
 func main() {
@@ -12,4 +13,10 @@ func main() {
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 	}
+
+	tilemap, err := world.LoadTilemap("./res/tiles.json", 0)
+	fmt.Println("tilemap", tilemap)
+
+	materialmap, err := world.LoadMaterialmap("./res/materials.json")
+	fmt.Println("materialmap", materialmap)
 }

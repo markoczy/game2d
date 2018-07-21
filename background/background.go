@@ -29,18 +29,28 @@ func (bg *singleTiledBG) Render(screen display.Screen) {
 	// startx := (bg.dim.X - w0.X%bg.dim.X) + bg.offset.X
 	// starty := (bg.dim.Y - w0.X%bg.dim.Y) + bg.offset.Y
 	startx := (w0.X - w0.X%bg.dim.X) + bg.offset.X
+	if startx > 0 {
+		startx -= bg.dim.X
+	}
 	starty := (w0.Y - w0.X%bg.dim.Y) + bg.offset.Y
+	if starty > 0 {
+		starty -= bg.dim.Y
+	}
 
 	max := screen.Bounds().Max
 	log.Printf("*** startx: %v, starty: %v, max: %v\n", startx, starty, max)
 	// screen.RenderW(bg.img, image.Point{startx, starty}, bg.dim)
+	cnt := 0
 	for x := startx; x <= max.X; x += bg.dim.X {
 		for y := starty; y <= max.Y; y += bg.dim.Y {
 			// screen.Re
 			// log.Printf("x: %v, y: %v, dim: %v\n", x, y, bg.dim)
 			screen.RenderW(bg.img, image.Point{x, y}, bg.dim)
+			cnt++
 		}
 	}
+	log.Printf("Rendered %d Tiles\n", cnt)
+
 }
 
 func NewSingleTiledBG(img *image.RGBA, dim image.Point, offset image.Point) display.Visual {
