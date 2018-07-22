@@ -5,6 +5,7 @@ import (
 	"github.com/markoczy/game2d/background"
 	"github.com/markoczy/game2d/display"
 	"github.com/markoczy/game2d/entity"
+	"github.com/markoczy/game2d/world"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/lifecycle"
@@ -26,8 +27,9 @@ type game struct {
 	width, height int
 	scale, ttick  int
 	screen        display.Screen
-	entities      []entity.Entity
 	bg            display.Visual
+	world         world.World
+	entities      []entity.Entity
 }
 
 func (g *game) Run() error {
@@ -69,6 +71,31 @@ func (g *game) Run() error {
 
 		g.screen = display.NewScreen(w, s, g.width, g.height, g.scale)
 		// g.screen.SetPos(image.Point{100, 100})
+
+		tilemap, err := world.LoadTilemap("./res/testtiles/testtiles.json", 0)
+		if err != nil {
+			chErr <- err
+			return
+		}
+		// fmt.Println("tilemap", tilemap)
+		materialmap, err := world.LoadMaterialmap("./res/testtiles/testtiles_mat.json")
+		if err != nil {
+			chErr <- err
+			return
+		}
+		// fmt.Println("materialmap", materialmap)
+		tiles, err := world.LoadRawTiles("./res/testtiles", "testtile")
+		if err != nil {
+			chErr <- err
+			return
+		}
+		// fmt.Println("tiles", len(tiles))
+		level, err := world.NewSimpleWorld(tilemap, materialmap, tiles, g.scale)
+		if err != nil {
+			chErr <- err
+			return
+		}
+		g.world = level
 
 		// Start Game Thread
 		go func() {
@@ -132,6 +159,9 @@ func (g *game) tick() {
 func (g *game) render() {
 	if g.bg != nil {
 		g.bg.Render(g.screen)
+	}
+	if g.world != nil {
+		g.world.Render(g.screen)
 	}
 	for _, ent := range g.entities {
 		ent.Render(g.screen)

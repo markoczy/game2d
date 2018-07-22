@@ -1,0 +1,49 @@
+{
+  "materials": [
+    {
+      "id": 0,
+      "name": "rock_ul",
+      "solid": 1
+    },
+    {
+      "id": 1,
+      "name": "rock_u",
+      "solid": 1
+    },
+    {
+      "id": 2,
+      "name": "rock_ur",
+      "solid": 1
+    },
+    {
+      "id": 3,
+      "name": "rock_l",
+      "solid": 1
+    },
+    {
+      "id": 4,
+      "name": "rock_m",
+      "solid": 1
+    },
+    {
+      "id": 5,
+      "name": "rock_r",
+      "solid": 1
+    },
+    {
+      "id": 6,
+      "name": "rock_dl",
+      "solid": 1
+    },
+    {
+      "id": 7,
+      "name": "rock_d",
+      "solid": 1
+    },
+    {
+      "id": 8,
+      "name": "rock_dr",
+      "solid": 1
+    }
+  ]
+}
