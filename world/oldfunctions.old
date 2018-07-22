@@ -1,0 +1,36 @@
+func (w *simpleWorld) Render(screen display.Screen) {
+	// 1) Get lowest left tile
+	w0 := screen.Bounds().Min
+	w1 := screen.Bounds().Max
+	th := w.tileMap.TileHeight
+	tw := w.tileMap.TileWidth
+	tile0 := image.Point{w0.X / tw, w0.Y / th}
+	tile1 := image.Point{w1.X / tw, w1.Y / th}
+	// fmt.Printf("th: %d tw: %d\n", th, tw)
+	// fmt.Printf("w0: %v tile0: %v\n", w0, tile0)
+	// fmt.Printf("w1: %v tile1: %v\n", w1, tile1)
+	cnt := 0
+	done := make(chan bool)
+	threads := 0
+	for x := tile0.X; x <= tile1.X; x++ {
+		go func(x int) {
+			for y := tile0.Y; y <= tile1.Y; y++ {
+				// fmt.Printf("x: %d y: %d\n", x, y)
+				img, dim, err := w.getRenderedTile(x, y)
+				if err != nil {
+					fmt.Println("Error:", err)
+				}
+				if img != nil {
+					screen.RenderW(img, image.Point{x * tw, y * th}, dim)
+				}
+				cnt++
+			}
+			done <- true
+		}(x)
+		threads++
+	}
+	for i := 0; i < threads; i++ {
+		<-done
+	}
+	// fmt.Printf("Rendered %d tiles\n", cnt)
+}

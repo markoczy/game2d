@@ -6,7 +6,7 @@ import ()
 type Tilemap struct {
 	TilesWide, TilesHigh  int
 	TileWidth, TileHeight int
-	Tiles                 []Tile
+	Tiles                 []*Tile
 }
 
 // Tile definition of a tile
@@ -50,13 +50,13 @@ func LoadTilemap(file string, layer int) (*Tilemap, error) {
 	layers, err := getChildrenArray(tilemap, "layers")
 	layerel := layers[layer]
 	tilesel, err := getChildrenArray(layerel, "tiles")
-	tiles := []Tile{}
+	tiles := []*Tile{}
 	for _, cur := range tilesel {
 		tile, err := mapToTile(cur)
 		if err != nil {
 			return nil, err
 		}
-		tiles = append(tiles, *tile)
+		tiles = append(tiles, tile)
 	}
 	return &Tilemap{TileWidth: tilewidth,
 		TileHeight: tileheight,
@@ -66,15 +66,18 @@ func LoadTilemap(file string, layer int) (*Tilemap, error) {
 }
 
 func mapToTile(data map[string]interface{}) (*Tile, error) {
+	tile, err := getIntValue(data, "tile")
+	if err != nil {
+		return nil, err
+	}
+	if tile == -1 {
+		return nil, nil
+	}
 	index, err := getIntValue(data, "index")
 	if err != nil {
 		return nil, err
 	}
 	rot, err := getIntValue(data, "rot")
-	if err != nil {
-		return nil, err
-	}
-	tile, err := getIntValue(data, "tile")
 	if err != nil {
 		return nil, err
 	}

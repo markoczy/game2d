@@ -49,7 +49,7 @@ func (bg *singleTiledBG) Render(screen display.Screen) {
 			cnt++
 		}
 	}
-	log.Printf("Rendered %d Tiles\n", cnt)
+	log.Printf("BG: Rendered %d Tiles\n", cnt)
 
 }
 

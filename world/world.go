@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/markoczy/game2d/display"
 	"image"
+	"log"
 )
 
 type tileDisplay struct {
@@ -54,11 +55,11 @@ func (w *simpleWorld) Render(screen display.Screen) {
 			}
 			if img != nil {
 				screen.RenderW(img, image.Point{x * tw, y * th}, dim)
+				cnt++
 			}
-			cnt++
 		}
 	}
-	// fmt.Printf("Rendered %d tiles\n", cnt)
+	log.Printf("World: Rendered %d tiles\n", cnt)
 }
 
 func (w *simpleWorld) getRenderedTile(x, y int) (*image.RGBA, image.Point, error) {
@@ -71,6 +72,9 @@ func (w *simpleWorld) getRenderedTile(x, y int) (*image.RGBA, image.Point, error
 		return nil, image.ZP, fmt.Errorf("Rendered tile at (%d; %d) not found, offset was: %d", x, y, yoffset+x)
 	}
 	tile := w.tileMap.Tiles[yoffset+x]
+	if tile == nil {
+		return nil, image.ZP, nil
+	}
 	// tile := w.tiles[yoffset+x-1]
 
 	// verify x and y
