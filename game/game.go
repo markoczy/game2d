@@ -2,7 +2,7 @@ package game
 
 import (
 	// "fmt"
-	"github.com/markoczy/game2d/background"
+	// "github.com/markoczy/game2d/background"
 	"github.com/markoczy/game2d/display"
 	"github.com/markoczy/game2d/entity"
 	"github.com/markoczy/game2d/world"
@@ -38,7 +38,7 @@ func (g *game) Run() error {
 		return err
 	}
 	img = display.ScaleImage(img, g.scale)
-	g.bg = background.NewSingleTiledBG(img, dim, image.Point{2, 2})
+	// g.bg = background.NewSingleTiledBG(img, dim, image.Point{2, 2})
 
 	img, dim, err = display.LoadImage("./res/sample0.png")
 	if err != nil {
@@ -70,7 +70,7 @@ func (g *game) Run() error {
 		}
 
 		g.screen = display.NewScreen(w, s, g.width, g.height, g.scale)
-		// g.screen.SetPos(image.Point{100, 100})
+		// g.screen.SetPos(image.Point{-100, -100})
 
 		tilemap, err := world.LoadTilemap("./res/testtiles/testtiles.json", 0)
 		if err != nil {

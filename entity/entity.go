@@ -37,7 +37,7 @@ func (s *uniformSprite) Tick() {
 func (s *uniformSprite) Render(screen display.Screen) {
 	// pos := getEntScreenPos(s, screen)
 	// pos := screen.WorldCoordsToScreen(s.pos, s.dim.Y)
-	screen.RenderW(s.img, s.pos, s.dim)
+	screen.RenderElement(s.img, s.pos, s.dim)
 }
 
 func (s *uniformSprite) Pos() image.Point {

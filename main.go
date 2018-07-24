@@ -8,7 +8,7 @@ import (
 func main() {
 	fmt.Println("Started.")
 	// game.NewGame(800, 800, 10, 20).Run()
-	err := game.NewGame(800, 800, 6, 20).Run()
+	err := game.NewGame(800, 800, 4, 20).Run()
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 	}

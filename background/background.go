@@ -45,7 +45,7 @@ func (bg *singleTiledBG) Render(screen display.Screen) {
 		for y := starty; y <= max.Y; y += bg.dim.Y {
 			// screen.Re
 			// log.Printf("x: %v, y: %v, dim: %v\n", x, y, bg.dim)
-			screen.RenderW(bg.img, image.Point{x, y}, bg.dim)
+			screen.RenderElement(bg.img, image.Point{x, y}, bg.dim)
 			cnt++
 		}
 	}
@@ -54,5 +54,25 @@ func (bg *singleTiledBG) Render(screen display.Screen) {
 }
 
 func NewSingleTiledBG(img *image.RGBA, dim image.Point, offset image.Point) display.Visual {
+	// worldImg := image.NewRGBA(image.Rect(0, 0, tx*tw*scale, ty*th*scale))
+	// cnt := 0
+	// for x := 0; x <= tx; x++ {
+	// 	for y := 0; y <= ty; y++ {
+	// 		// fmt.Printf("x: %d y: %d\n", x, y)
+	// 		img, _, err := w.getRenderedTile(x, y)
+	// 		if err != nil {
+	// 			fmt.Println("Error:", err)
+	// 		}
+	// 		if img != nil {
+	// 			// screen.RenderW(img, image.Point{x * tw, y * th}, dim)
+	// 			pos := image.Point{
+	// 				x * tw * scale, (ty - y) * th * scale}
+
+	// 			draw.Draw(worldImg, img.Bounds().Add(pos), img, image.ZP, draw.Over)
+	// 			cnt++
+	// 		}
+	// 	}
+	// }
+
 	return &singleTiledBG{img, dim, offset}
 }

@@ -1,6 +1,7 @@
 package display
 
 import (
+	// "fmt"
 	"golang.org/x/exp/shiny/screen"
 	"image"
 	// "image/color"
@@ -15,8 +16,9 @@ type Screen interface {
 	Bounds() image.Rectangle
 	SetPos(image.Point)
 	Scale() int // or somewhere else...
-	Render(img *image.RGBA, pos image.Point)
-	RenderW(img *image.RGBA, posw image.Point, dimw image.Point)
+	RenderDirect(img *image.RGBA, pos image.Point)
+	RenderElement(img *image.RGBA, posw image.Point, dimw image.Point)
+	// RenderFull(img *image.RGBA)
 }
 
 func NewScreen(window screen.Window, screen screen.Screen, width, height, scale int) Screen {
@@ -73,19 +75,31 @@ func (d *defaultScreen) Scale() int {
 }
 
 // Render pos is screen-related
-func (d *defaultScreen) Render(img *image.RGBA, pos image.Point) {
+func (d *defaultScreen) RenderDirect(img *image.RGBA, pos image.Point) {
 	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Over)
 }
 
 // RenderW pos is world-related
-func (d *defaultScreen) RenderW(img *image.RGBA, pos image.Point, dim image.Point) {
+func (d *defaultScreen) RenderElement(img *image.RGBA, pos image.Point, dim image.Point) {
 	posS := d.worldCoordsToScreen(pos, dim.Y)
+	// fmt.Printf("pos: %v, dim.Y: %v, posS: %v\n", pos, dim.Y, posS)
 	draw.Draw(d.rgba, img.Bounds().Add(posS), img, image.ZP, draw.Over)
 }
+
+// // RenderW pos is world-related
+// func (d *defaultScreen) RenderFull(img *image.RGBA) {
+// 	rect := d.bounds //image.Rectangle{image.ZP, d.bounds.Max.Div(d.scale)}
+// 	xNew := (-rect.Min.X) * d.scale
+// 	yNew := ((rect.Min.Y + rect.Dy()) - 320) * d.scale //(rect.Min.Y + rect.Dy()) * d.scale
+// 	pos := image.Point{xNew, yNew}
+// 	fmt.Printf("bounds: %v, rpos: %v\n", d.bounds, pos)
+// 	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Over)
+// }
 
 func (d *defaultScreen) worldCoordsToScreen(pos image.Point, height int) image.Point {
 	rect := d.bounds
 	xNew := (pos.X - rect.Min.X) * d.scale
+	// fmt.Printf("rec: %v, rect.Dy(): %v, pos.Y: %d, height: %v\n", rect, rect.Dy(), pos.Y, height)
 	yNew := ((rect.Min.Y + rect.Dy()) - (pos.Y + height)) * d.scale
 	// log.Printf("rect: %v, pos: %v, xNew: %v, yNew: %v\n", rect, pos, xNew, yNew)
 	return image.Point{xNew, yNew}

@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/markoczy/game2d/display"
 	"image"
-	"image/color"
-	"image/draw"
-	// "log"
+	"log"
 )
 
 type tileDisplay struct {
@@ -32,23 +30,36 @@ type simpleWorld struct {
 	tileMap   *Tilemap
 	materials *Materialmap
 	tiles     []tileDisplay
-	worldImg  *image.RGBA
 }
 
 func (w *simpleWorld) Tick() {}
 
 func (w *simpleWorld) Render(screen display.Screen) {
+	// 1) Get lowest left tile
+	w0 := screen.Bounds().Min
+	w1 := screen.Bounds().Max
 	th := w.tileMap.TileHeight
 	tw := w.tileMap.TileWidth
-	tx := w.tileMap.TilesWide
-	ty := w.tileMap.TilesHigh
-	dim := image.Point{tx * tw, ty * th}
-	// fmt.Printf("bounds: %v, screen: %v, dim: %v\n", w.worldImg.Bounds(), screen.Bounds(), dim)
-	//
-
-	// fmt.Println("w.worldImg", w.worldImg)
-	// screen.RenderFull(w.worldImg)
-	screen.RenderElement(w.worldImg, image.ZP, dim)
+	tile0 := image.Point{w0.X / tw, w0.Y / th}
+	tile1 := image.Point{w1.X / tw, w1.Y / th}
+	// fmt.Printf("th: %d tw: %d\n", th, tw)
+	// fmt.Printf("w0: %v tile0: %v\n", w0, tile0)
+	// fmt.Printf("w1: %v tile1: %v\n", w1, tile1)
+	cnt := 0
+	for x := tile0.X; x <= tile1.X; x++ {
+		for y := tile0.Y; y <= tile1.Y; y++ {
+			// fmt.Printf("x: %d y: %d\n", x, y)
+			img, dim, err := w.getRenderedTile(x, y)
+			if err != nil {
+				fmt.Println("Error:", err)
+			}
+			if img != nil {
+				screen.RenderW(img, image.Point{x * tw, y * th}, dim)
+				cnt++
+			}
+		}
+	}
+	log.Printf("World: Rendered %d tiles\n", cnt)
 }
 
 func (w *simpleWorld) getRenderedTile(x, y int) (*image.RGBA, image.Point, error) {
@@ -91,52 +102,14 @@ func (w *simpleWorld) getRenderedTile(x, y int) (*image.RGBA, image.Point, error
 
 func NewSimpleWorld(tileMap *Tilemap, materials *Materialmap, rawTiles []*image.RGBA, scale int) (World, error) {
 	tiles := []tileDisplay{}
-	for _, rawtile := range rawTiles {
-		cur := newRenderedTile(rawtile, scale)
+	for _, img := range rawTiles {
+		cur := newRenderedTile(img, scale)
 		tiles = append(tiles, cur)
 	}
-	th := tileMap.TileHeight
-	tw := tileMap.TileWidth
-	tx := tileMap.TilesWide
-	ty := tileMap.TilesHigh
-
-	w := simpleWorld{
+	return &simpleWorld{
 		tileMap:   tileMap,
 		materials: materials,
-		tiles:     tiles}
-
-	worldImg := image.NewRGBA(image.Rect(0, 0, tx*tw*scale, ty*th*scale))
-	cnt := 0
-	for x := 0; x <= tx; x++ {
-		for y := 0; y <= ty; y++ {
-			// fmt.Printf("x: %d y: %d\n", x, y)
-			img, _, err := w.getRenderedTile(x, y)
-			if err != nil {
-				fmt.Println("Error:", err)
-			}
-			if img != nil {
-				// screen.RenderW(img, image.Point{x * tw, y * th}, dim)
-				pos := image.Point{
-					x * tw * scale, (ty - y) * th * scale}
-
-				draw.Draw(worldImg, img.Bounds().Add(pos), img, image.ZP, draw.Over)
-				cnt++
-			}
-		}
-	}
-	fmt.Printf("World: Rendered %d Tiles\n", cnt)
-
-	w.worldImg = worldImg
-	for x := 0; x < w.worldImg.Bounds().Max.X; x++ {
-		for y := 0; y < w.worldImg.Bounds().Max.Y; y++ {
-			if x == y {
-				w.worldImg.SetRGBA(x, y, color.RGBA{255, 0, 0, 255})
-			}
-		}
-	}
-	// fmt.Println("img", worldImg)
-
-	return &w, nil
+		tiles:     tiles}, nil
 }
 
 func newRenderedTile(img *image.RGBA, scale int) tileDisplay {
