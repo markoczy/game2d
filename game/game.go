@@ -108,24 +108,25 @@ func (g *game) Run() error {
 			for !interrupt {
 				g.screen.SetPos(image.Point{ticks, ticks})
 				tStart := time.Now().UTC().UnixNano()
-				err := g.screen.InitBuffer()
-				if err != nil {
-					chErr <- err
-					return
-				}
+				// err := g.screen.InitBuffer()
+				// if err != nil {
+				// 	chErr <- err
+				// 	return
+				// }
 
 				g.tick()
+				// go func() {
 				g.render()
+				// }()
 
-				g.screen.UploadBuffer()
 				// Smooth Framerate
 				deltaT := (time.Now().UTC().UnixNano() - tStart) / 10e6
 				sleep := g.ttick - int(deltaT)
 				if sleep > 0 {
-					log.Printf("Sleeping %d millis", sleep)
+					log.Printf("%d Sleeping %d millis", ticks, sleep)
 					time.Sleep(time.Duration(sleep) * time.Millisecond)
 				} else {
-					log.Printf("Overdue %d millis", -sleep)
+					log.Printf("%d Overdue %d millis", ticks, -sleep)
 				}
 				ticks++
 
@@ -162,15 +163,19 @@ func (g *game) tick() {
 }
 
 func (g *game) render() {
-	if g.bg != nil {
-		g.bg.Render(g.screen)
-	}
-	if g.world != nil {
-		g.world.Render(g.screen)
-	}
-	for _, ent := range g.entities {
-		ent.Render(g.screen)
-	}
+	go func(g *game) {
+		g.screen.InitBuffer()
+		if g.bg != nil {
+			g.bg.Render(g.screen)
+		}
+		if g.world != nil {
+			g.world.Render(g.screen)
+		}
+		for _, ent := range g.entities {
+			ent.Render(g.screen)
+		}
+		g.screen.UploadBuffer()
+	}(g)
 }
 
 func (g *game) addTestEntity(img *image.RGBA, p0 image.Point, dim image.Point, dp image.Point) {

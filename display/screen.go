@@ -1,12 +1,13 @@
 package display
 
 import (
-	// "fmt"
+	"fmt"
 	"golang.org/x/exp/shiny/screen"
 	"image"
 	// "image/color"
 	"image/draw"
 	// "log"
+	"sync"
 )
 
 type Screen interface {
@@ -28,7 +29,8 @@ func NewScreen(window screen.Window, screen screen.Screen, width, height, scale 
 		width:  width,
 		height: height,
 		scale:  scale,
-		bounds: image.Rect(0, 0, width/scale, height/scale)}
+		bounds: image.Rect(0, 0, width/scale, height/scale),
+		mut:    &sync.Mutex{}}
 }
 
 type defaultScreen struct {
@@ -41,33 +43,51 @@ type defaultScreen struct {
 	screen screen.Screen
 	buffer screen.Buffer
 	rgba   *image.RGBA
+	mut    *sync.Mutex
 }
 
 func (d *defaultScreen) InitBuffer() error {
+	d.mut.Lock()
+	fmt.Println("InitBuffer")
 	buf, err := d.screen.NewBuffer(image.Point{d.width, d.height})
 	if err != nil {
 		return err
 	}
 	d.buffer = buf
 	d.rgba = buf.RGBA()
+	d.mut.Unlock()
 	return nil
 }
 
 func (d *defaultScreen) UploadBuffer() {
+	// go func() {
+	d.mut.Lock()
+	fmt.Println("UploadBuffer")
+	// if d.buffer != nil {
 	d.window.Upload(image.ZP, d.buffer, d.buffer.Bounds())
-	d.buffer.Release()
+	// d.buffer.Release()
+	// d.buffer = nil
+	// d.rgba = nil
+	// }
+	d.mut.Unlock()
+	// }()
 }
 
 func (d *defaultScreen) SetPos(pos image.Point) {
+	d.mut.Lock()
 	d.bounds = image.Rectangle{
 		Min: pos,
 		Max: image.Point{
 			X: pos.X + d.bounds.Dx(),
 			Y: pos.Y + d.bounds.Dy()}}
+	d.mut.Unlock()
 }
 
 func (d *defaultScreen) Bounds() image.Rectangle {
-	return d.bounds
+	d.mut.Lock()
+	ret := d.bounds
+	d.mut.Unlock()
+	return ret
 }
 
 func (d *defaultScreen) Scale() int {
@@ -76,14 +96,20 @@ func (d *defaultScreen) Scale() int {
 
 // Render pos is screen-related
 func (d *defaultScreen) RenderDirect(img *image.RGBA, pos image.Point) {
+	d.mut.Lock()
 	draw.Draw(d.rgba, img.Bounds().Add(pos), img, image.ZP, draw.Over)
+	d.mut.Unlock()
 }
 
 // RenderW pos is world-related
 func (d *defaultScreen) RenderElement(img *image.RGBA, pos image.Point, dim image.Point) {
-	posS := d.worldCoordsToScreen(pos, dim.Y)
-	// fmt.Printf("pos: %v, dim.Y: %v, posS: %v\n", pos, dim.Y, posS)
-	draw.Draw(d.rgba, img.Bounds().Add(posS), img, image.ZP, draw.Over)
+	d.mut.Lock()
+	if d.rgba != nil {
+		posS := d.worldCoordsToScreen(pos, dim.Y)
+		// fmt.Printf("img.Bounds().Add(posS): %v\n", img.Bounds().Add(posS))
+		draw.Draw(d.rgba, img.Bounds().Add(posS), img, image.ZP, draw.Over)
+	}
+	d.mut.Unlock()
 }
 
 // // RenderW pos is world-related
