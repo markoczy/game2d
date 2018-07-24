@@ -1,78 +1,82 @@
 package background
 
 import (
-	"github.com/markoczy/game2d/display"
 	"image"
+	"image/draw"
 	"log"
+
+	"github.com/markoczy/game2d/display"
 )
 
 type singleTiledBG struct {
-	img    *image.RGBA
-	dim    image.Point
-	offset image.Point
+	tile       *image.RGBA
+	tileDim    image.Point
+	tileOffset image.Point
+	worldDim   image.Point
+	worldImg   *image.RGBA
+	scale      int
 }
 
 func (bg *singleTiledBG) Render(screen display.Screen) {
+	// render preloaded image
+	screen.RenderElement(bg.worldImg, image.ZP, bg.worldDim)
+}
+
+func (bg *singleTiledBG) initWorld() error {
+	// if the offset is not 0, begin must be calculated:
 	//
-	// p := screen.Bounds().Min.Add(bg.offset)
-	// p := screen.Bounds().Min.Add(bg.offset)
-	// startx := p.X % bg.dim.X
-	// if startx > 0 {
-	// 	startx -= bg.dim.X
-	// }
-	// starty := p.Y % bg.dim.Y
-	// if starty > 0 {
-	// 	starty -= bg.dim.Y
-	// }
+	// tile:       +-------+
+	// screen: +------------------
+	//         /---/------/
+	//          ofx   tw   ->  beginx = (ofx % tw) - tw
+	//
+	tw := bg.tileDim.X
+	th := bg.tileDim.Y
+	ww := bg.worldDim.X
+	wh := bg.worldDim.Y
+	scale := bg.scale
+	img := bg.tile
 
-	w0 := screen.Bounds().Min
-	// startx := (bg.dim.X - w0.X%bg.dim.X) + bg.offset.X
-	// starty := (bg.dim.Y - w0.X%bg.dim.Y) + bg.offset.Y
-	startx := (w0.X - w0.X%bg.dim.X) + bg.offset.X
-	if startx > 0 {
-		startx -= bg.dim.X
+	start := image.Point{0, 0}
+	modX := mod(bg.tileOffset.X, tw)
+	modY := mod(bg.tileOffset.Y, th)
+	if modX > 0 {
+		start.X = modX - tw
 	}
-	starty := (w0.Y - w0.X%bg.dim.Y) + bg.offset.Y
-	if starty > 0 {
-		starty -= bg.dim.Y
+	if modY > 0 {
+		start.Y = modY - th
 	}
 
-	max := screen.Bounds().Max
-	log.Printf("*** startx: %v, starty: %v, max: %v\n", startx, starty, max)
-	// screen.RenderW(bg.img, image.Point{startx, starty}, bg.dim)
 	cnt := 0
-	for x := startx; x <= max.X; x += bg.dim.X {
-		for y := starty; y <= max.Y; y += bg.dim.Y {
-			// screen.Re
-			// log.Printf("x: %v, y: %v, dim: %v\n", x, y, bg.dim)
-			screen.RenderElement(bg.img, image.Point{x, y}, bg.dim)
+	worldImg := image.NewRGBA(image.Rect(0, 0, bg.worldDim.X*bg.scale, bg.worldDim.Y*bg.scale))
+	for x := start.X; x <= ww; x += tw {
+		for y := start.Y; y <= wh; y += th {
+			pos := image.Point{
+				x * scale, (wh - y) * scale}
+
+			draw.Draw(worldImg, img.Bounds().Add(pos), img, image.ZP, draw.Over)
 			cnt++
 		}
 	}
 	log.Printf("BG: Rendered %d Tiles\n", cnt)
-
+	bg.worldImg = worldImg
+	return nil
 }
 
-func NewSingleTiledBG(img *image.RGBA, dim image.Point, offset image.Point) display.Visual {
-	// worldImg := image.NewRGBA(image.Rect(0, 0, tx*tw*scale, ty*th*scale))
-	// cnt := 0
-	// for x := 0; x <= tx; x++ {
-	// 	for y := 0; y <= ty; y++ {
-	// 		// fmt.Printf("x: %d y: %d\n", x, y)
-	// 		img, _, err := w.getRenderedTile(x, y)
-	// 		if err != nil {
-	// 			fmt.Println("Error:", err)
-	// 		}
-	// 		if img != nil {
-	// 			// screen.RenderW(img, image.Point{x * tw, y * th}, dim)
-	// 			pos := image.Point{
-	// 				x * tw * scale, (ty - y) * th * scale}
+func NewSingleTiledBG(img *image.RGBA, tileDim image.Point, offset image.Point, worldDim image.Point, scale int) (display.Visual, error) {
+	ret := singleTiledBG{tile: img, tileDim: tileDim, tileOffset: offset, worldDim: worldDim, scale: scale}
+	err := ret.initWorld()
+	if err != nil {
+		return nil, err
+	}
+	return &ret, nil
+}
 
-	// 			draw.Draw(worldImg, img.Bounds().Add(pos), img, image.ZP, draw.Over)
-	// 			cnt++
-	// 		}
-	// 	}
-	// }
-
-	return &singleTiledBG{img, dim, offset}
+// strict positive modulo
+func mod(a, b int) int {
+	ret := a % b
+	if ret < 0 {
+		ret += b
+	}
+	return ret
 }

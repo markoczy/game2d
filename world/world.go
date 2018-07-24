@@ -2,10 +2,11 @@ package world
 
 import (
 	"fmt"
-	"github.com/markoczy/game2d/display"
 	"image"
 	"image/color"
 	"image/draw"
+
+	"github.com/markoczy/game2d/display"
 	// "log"
 )
 
@@ -38,6 +39,7 @@ type simpleWorld struct {
 func (w *simpleWorld) Tick() {}
 
 func (w *simpleWorld) Render(screen display.Screen) {
+	// TODO any more inefficient? ;-)
 	th := w.tileMap.TileHeight
 	tw := w.tileMap.TileWidth
 	tx := w.tileMap.TilesWide

@@ -3,16 +3,18 @@ package game
 import (
 	// "fmt"
 	// "github.com/markoczy/game2d/background"
+	"image"
+	"log"
+	"math/rand"
+	"time"
+
+	"github.com/markoczy/game2d/background"
 	"github.com/markoczy/game2d/display"
 	"github.com/markoczy/game2d/entity"
 	"github.com/markoczy/game2d/world"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/lifecycle"
-	"image"
-	"log"
-	"math/rand"
-	"time"
 )
 
 func NewGame(width, height, scale, tick int) Game {
@@ -38,7 +40,10 @@ func (g *game) Run() error {
 		return err
 	}
 	img = display.ScaleImage(img, g.scale)
-	// g.bg = background.NewSingleTiledBG(img, dim, image.Point{2, 2})
+	g.bg, err = background.NewSingleTiledBG(img, dim, image.Point{1, 1}, image.Point{200, 200}, g.scale)
+	if err != nil {
+		return err
+	}
 
 	img, dim, err = display.LoadImage("./res/sample0.png")
 	if err != nil {
