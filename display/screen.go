@@ -39,11 +39,11 @@ type defaultScreen struct {
 	// World related dims
 	bounds image.Rectangle
 	// Buffering
-	window screen.Window
-	screen screen.Screen
-	buffer screen.Buffer
-	rgba   *image.RGBA
-	mut    *sync.Mutex
+	window  screen.Window
+	screen  screen.Screen
+	buffers []screen.Buffer
+	rgba    *image.RGBA
+	mut     *sync.Mutex
 }
 
 func (d *defaultScreen) InitBuffer() error {
@@ -53,7 +53,7 @@ func (d *defaultScreen) InitBuffer() error {
 	if err != nil {
 		return err
 	}
-	d.buffer = buf
+	d.buffers = append(d.buffers, buf)
 	d.rgba = buf.RGBA()
 	d.mut.Unlock()
 	return nil
@@ -62,10 +62,12 @@ func (d *defaultScreen) InitBuffer() error {
 func (d *defaultScreen) UploadBuffer() {
 	// go func() {
 	d.mut.Lock()
-	fmt.Println("UploadBuffer")
+	fmt.Println("UploadBuffer len:", len(d.buffers))
 	// if d.buffer != nil {
-	d.window.Upload(image.ZP, d.buffer, d.buffer.Bounds())
-	// d.buffer.Release()
+	buffer := d.buffers[0]
+	d.buffers = d.buffers[1:]
+	d.window.Upload(image.ZP, buffer, buffer.Bounds())
+	buffer.Release()
 	// d.buffer = nil
 	// d.rgba = nil
 	// }
