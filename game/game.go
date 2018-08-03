@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	// "fmt"
 	// "github.com/markoczy/game2d/background"
 	"image"
@@ -14,7 +15,9 @@ import (
 	"github.com/markoczy/game2d/world"
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
+	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
+	"golang.org/x/mobile/event/paint"
 )
 
 func NewGame(width, height, scale, tick int) Game {
@@ -108,16 +111,9 @@ func (g *game) Run() error {
 			for !interrupt {
 				g.screen.SetPos(image.Point{ticks, ticks})
 				tStart := time.Now().UTC().UnixNano()
-				err := g.screen.InitBuffer()
-				if err != nil {
-					chErr <- err
-					return
-				}
 
 				g.tick()
-				g.render()
 
-				g.screen.UploadBuffer()
 				// Smooth Framerate
 				deltaT := (time.Now().UTC().UnixNano() - tStart) / 10e6
 				sleep := g.ttick - int(deltaT)
@@ -128,6 +124,7 @@ func (g *game) Run() error {
 					log.Printf("Overdue %d millis", -sleep)
 				}
 				ticks++
+				w.Send(paint.Event{})
 
 			}
 		}()
@@ -140,6 +137,16 @@ func (g *game) Run() error {
 					interrupt = true
 					chInterrupt <- true
 				}
+			case paint.Event:
+				err := g.screen.InitBuffer()
+				if err != nil {
+					chErr <- err
+					return
+				}
+				g.render()
+				g.screen.UploadBuffer()
+			case key.Event:
+				fmt.Println("Keypress:", e.Code)
 			}
 		}
 	})
