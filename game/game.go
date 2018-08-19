@@ -20,6 +20,15 @@ import (
 	"golang.org/x/mobile/event/paint"
 )
 
+var (
+	up      = false
+	down    = false
+	left    = false
+	right   = false
+	screenX = 0
+	screenY = 0
+)
+
 func NewGame(width, height, scale, tick int) Game {
 	return &game{width: width, height: height, scale: scale, ttick: tick}
 }
@@ -109,7 +118,20 @@ func (g *game) Run() error {
 		go func() {
 			ticks := 0
 			for !interrupt {
-				g.screen.SetPos(image.Point{ticks, ticks})
+				if up {
+					screenY++
+				}
+				if down {
+					screenY--
+				}
+				if left {
+					screenX--
+				}
+				if right {
+					screenX++
+				}
+
+				g.screen.SetPos(image.Point{screenX, screenY})
 				tStart := time.Now().UTC().UnixNano()
 
 				g.tick()
@@ -146,7 +168,33 @@ func (g *game) Run() error {
 				g.render()
 				g.screen.UploadBuffer()
 			case key.Event:
-				fmt.Println("Keypress:", e.Code)
+				fmt.Println("Keypress:", e.Code, e.Direction)
+				switch e.Code {
+				case key.CodeW:
+					if e.Direction == key.DirPress {
+						up = true
+					} else if e.Direction == key.DirRelease {
+						up = false
+					}
+				case key.CodeS:
+					if e.Direction == key.DirPress {
+						down = true
+					} else if e.Direction == key.DirRelease {
+						down = false
+					}
+				case key.CodeA:
+					if e.Direction == key.DirPress {
+						left = true
+					} else if e.Direction == key.DirRelease {
+						left = false
+					}
+				case key.CodeD:
+					if e.Direction == key.DirPress {
+						right = true
+					} else if e.Direction == key.DirRelease {
+						right = false
+					}
+				}
 			}
 		}
 	})
