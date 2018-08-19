@@ -1,7 +1,8 @@
 package game
 
 import (
-	// "fmt"
+	"fmt"
+	"golang.org/x/mobile/event/key"
 	// "github.com/markoczy/game2d/background"
 	"image"
 	"log"
@@ -15,6 +16,15 @@ import (
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
 	"golang.org/x/mobile/event/lifecycle"
+)
+
+var (
+	up      = false
+	down    = false
+	left    = false
+	right   = false
+	screenX = 0
+	screenY = 0
 )
 
 func NewGame(width, height, scale, tick int) Game {
@@ -106,7 +116,20 @@ func (g *game) Run() error {
 		go func() {
 			ticks := 0
 			for !interrupt {
-				g.screen.SetPos(image.Point{ticks, ticks})
+				if up {
+					screenY++
+				}
+				if down {
+					screenY--
+				}
+				if left {
+					screenX--
+				}
+				if right {
+					screenX++
+				}
+				g.screen.SetPos(image.Point{screenX, screenY})
+				// g.screen.SetPos(image.Point{ticks, ticks})
 				tStart := time.Now().UTC().UnixNano()
 				// err := g.screen.InitBuffer()
 				// if err != nil {
@@ -140,6 +163,34 @@ func (g *game) Run() error {
 				if e.To == lifecycle.StageDead {
 					interrupt = true
 					chInterrupt <- true
+				}
+			case key.Event:
+				fmt.Println("Keypress:", e.Code, e.Direction)
+				switch e.Code {
+				case key.CodeW:
+					if e.Direction == key.DirPress {
+						up = true
+					} else if e.Direction == key.DirRelease {
+						up = false
+					}
+				case key.CodeS:
+					if e.Direction == key.DirPress {
+						down = true
+					} else if e.Direction == key.DirRelease {
+						down = false
+					}
+				case key.CodeA:
+					if e.Direction == key.DirPress {
+						left = true
+					} else if e.Direction == key.DirRelease {
+						left = false
+					}
+				case key.CodeD:
+					if e.Direction == key.DirPress {
+						right = true
+					} else if e.Direction == key.DirRelease {
+						right = false
+					}
 				}
 			}
 		}
